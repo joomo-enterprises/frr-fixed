@@ -1,0 +1,102 @@
+== installing staged tree over /usr ==
+== building two namespaces over a veth pair ==
+== starting zebra + patched ospf6d in ns r ==
+2026/11/25 12:58:21 ZEBRA: [NFX3B-68SEX] FD Limit set: 1048576 is too large.  Is this intentional?  Consider using --limit-fds. Limiting size to 100000
+2026/11/25 12:58:21 ZEBRA: [QBKSZ-0KHCW][EC 4043309138] Disabling MPLS support (no kernel support)
+2026/11/25 12:58:23 OSPF6: [NFX3B-68SEX] FD Limit set: 1048576 is too large.  Is this intentional?  Consider using --limit-fds. Limiting size to 100000
+--- ospf6 interfaces ---
+v0 is up, type BROADCAST
+  Interface ID: 4
+  Internet Address:
+    inet6: fe80::246e:70ff:fedb:dd0f/64
+    inet6: fe80::1/64
+    inet6: 2001:db8:1::1/64
+  Instance ID 0, Interface MTU 1500 (autodetect: 1500)
+  MTU mismatch detection: enabled
+  Area ID 0.0.0.0, Cost 10
+  State Waiting, Transmit Delay 1 sec, Priority 1
+  Timer intervals configured:
+   Hello 10(6.038), Dead 40, Retransmit 5
+  DR: 0.0.0.0 BDR: 0.0.0.0
+  Number of I/F scoped LSAs is 1
+    0 Pending LSAs for LSUpdate in Time 00:00:00 [thread off]
+    0 Pending LSAs for LSAck in Time 00:00:00 [thread off]
+  Graceful Restart hello delay: 10s
+  Authentication Trailer is disabled
+--- joined multicast ---
+4:	v0
+	link  33:33:00:00:00:01
+	link  01:00:5e:00:00:01
+	link  33:33:ff:db:dd:0f
+	link  33:33:ff:00:00:01
+	link  33:33:00:00:00:05
+	inet  224.0.0.1
+	inet6 ff02::5
+--- link counters before ---
+4: v0@if3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 26:6e:70:db:dd:0f brd ff:ff:ff:ff:ff:ff link-netns a
+    RX:  bytes packets errors dropped  missed   mcast           
+           838       9      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+          1108      12      0       0       0       0 
+debconf: delaying package configuration, since apt-utils is not installed
+
+== A: Hello from global source 2001:db8:1::2 (must be discarded) ==
+sent 3 hello(s) src=2001:db8:1::2 dst=ff02::5 on v1
+--- neighbor table ---
+Neighbor ID     Pri    DeadTime    State/IfState         Duration I/F[State]
+--- log tail ---
+2026/11/25 12:58:35 OSPF6: [RA6WJ-XZB2C]     Area-ID:0.0.0.0 Cksum:f389 Instance-ID:0
+2026/11/25 12:58:35 OSPF6: [K6N0H-3Q3W7]     I/F-Id:4 Priority:1 Option:--|-|--|-|-|--|R|-|--|E|V6
+2026/11/25 12:58:35 OSPF6: [MFC3G-8KW9N]     HelloInterval:10 DeadInterval:40
+2026/11/25 12:58:35 OSPF6: [SMPBA-YB7BT]     DR:0.0.0.0 BDR:0.0.0.0
+2026/11/25 12:58:35 OSPF6: [V53N7-QNXR2] discarding packet from non-LL source 2001:db8:1::2, faulty neighbor?
+A: non-LL discards=3  neighbors=0
+
+== B: Hello from link-local source fe80::2 (must be accepted) ==
+sent 3 hello(s) src=fe80::2 dst=ff02::5 on v1
+--- neighbor table ---
+Neighbor ID     Pri    DeadTime    State/IfState         Duration I/F[State]
+10.0.0.2          1    00:00:35     Init/DROther         00:00:05 v0[Waiting]
+B: neighbors=1
+--- log tail ---
+2026/11/25 12:58:40 OSPF6: [HEXF0-KA35R] Hello received on v0
+2026/11/25 12:58:40 OSPF6: [WT04E-NR4JP]     src: fe80::2
+2026/11/25 12:58:40 OSPF6: [K2TW0-CYAQX]     dst: ff02::5
+2026/11/25 12:58:40 OSPF6: [GNVTE-A64WG]     OSPFv3 Type:1 Len:36 Router-ID:10.0.0.2
+2026/11/25 12:58:40 OSPF6: [RA6WJ-XZB2C]     Area-ID:0.0.0.0 Cksum:f386 Instance-ID:0
+2026/11/25 12:58:40 OSPF6: [K6N0H-3Q3W7]     I/F-Id:5 Priority:1 Option:--|-|--|-|-|--|R|-|--|E|V6
+2026/11/25 12:58:40 OSPF6: [MFC3G-8KW9N]     HelloInterval:10 DeadInterval:40
+2026/11/25 12:58:40 OSPF6: [SMPBA-YB7BT]     DR:0.0.0.0 BDR:0.0.0.0
+
+--- link counters after ---
+4: v0@if3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 26:6e:70:db:dd:0f brd ff:ff:ff:ff:ff:ff link-netns a
+    RX:  bytes packets errors dropped  missed   mcast           
+          1448      16      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+          1268      14      0       0       0       0 
+--- tcpdump on v0 (proto 89) ---
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on v0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+12:58:34.548671 IP6 2001:db8:1::2 > ff02::5: OSPFv3, Hello, length 36
+12:58:35.048923 IP6 2001:db8:1::2 > ff02::5: OSPFv3, Hello, length 36
+12:58:35.482635 IP6 fe80::1 > ff02::5: OSPFv3, Hello, length 36
+12:58:35.549142 IP6 2001:db8:1::2 > ff02::5: OSPFv3, Hello, length 36
+12:58:39.146791 IP6 fe80::2 > ff02::5: OSPFv3, Hello, length 36
+12:58:39.647161 IP6 fe80::2 > ff02::5: OSPFv3, Hello, length 36
+12:58:40.147474 IP6 fe80::2 > ff02::5: OSPFv3, Hello, length 36
+12:58:45.483542 IP6 fe80::1 > ff02::5: OSPFv3, Hello, length 40
+12:58:55.492513 IP6 fe80::1 > ff02::5: OSPFv3, Hello, length 40
+12:59:08.590667 IP6 fe80::1 > ff02::5: OSPFv3, Hello, length 40
+
+10 packets captured
+10 packets received by filter
+0 packets dropped by kernel
+
+================ RESULT ================
+PASS  off-link Hello rejected (warn logged, no adjacency)
+PASS  link-local Hello accepted (neighbor seen)
+========================================
+BUILD-OK
++ echo BUILD-OK
