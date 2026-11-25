@@ -29,9 +29,8 @@ sha256sum -c sha256sums.txt
 
 # 2. confirm the binary carries the fix before you trust it
 tar -xJf frr-10.9-dev-cve-2026-119776-bookworm-x86_64.tar.xz
-strings frr-release/usr/sbin/ospf6d-10.9-dev-cve-2026-119776 \
-  | grep -E "bogus destination|non-LL source"
-# discarding packet with bogus destination %pI6
+grep -a -o "discarding packet from non-LL source[^\"]*" \
+  frr-release/usr/sbin/ospf6d-10.9-dev-cve-2026-119776
 # discarding packet from non-LL source %pI6, faulty neighbor?
 ```
 

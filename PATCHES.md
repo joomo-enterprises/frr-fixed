@@ -69,8 +69,8 @@ That makes the honest options:
 ## Verify this binary carries the fix
 
 ```bash
-strings frr-release/usr/sbin/ospf6d-10.9-dev-cve-2026-119776 \
-  | grep -E "bogus destination|non-LL source"
+grep -a -o "discarding packet from non-LL source[^\"]*" \
+  frr-release/usr/sbin/ospf6d-10.9-dev-cve-2026-119776
 ```
 
 Or run the functional test: `test/test-ospf6d.sh` — an off-link Hello must be

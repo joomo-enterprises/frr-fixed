@@ -27,6 +27,26 @@ if [ ! -f "$HERE/$TARBALL" ]; then
   exit 1
 fi
 
+echo "== dependencies =="
+if command -v apt-get >/dev/null; then
+  # xz-utils is needed to unpack; the rest are the daemons' runtime libs
+  DEPS="xz-utils libjson-c5 libreadline8 libpcre2-8-0 libcap2 libelf1"
+  MISSING=""
+  for p in $DEPS; do
+    dpkg -s "$p" >/dev/null 2>&1 || MISSING="$MISSING $p"
+  done
+  if [ -n "$MISSING" ]; then
+    echo "installing$MISSING"
+    DEBIAN_FRONTEND=noninteractive apt-get update -qq
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $MISSING
+  fi
+elif ! command -v xz >/dev/null; then
+  echo "Need xz (xz-utils) to unpack this tarball." >&2
+  exit 1
+else
+  echo "not Debian: ensure libjson-c, libreadline, libpcre2, libcap, libelf are present" >&2
+fi
+
 if [ "${SKIP_VERIFY:-0}" != "1" ] && [ -f "$HERE/sha256sums.txt" ] && command -v sha256sum >/dev/null; then
   echo "== verifying checksums =="
   ( cd "$HERE" && sha256sum -c sha256sums.txt )
@@ -99,6 +119,8 @@ fi
 echo
 echo "Installed FRRouting $TAG to $PREFIX"
 echo "Verify the fix is present:"
-echo "  strings $PREFIX/sbin/ospf6d-$TAG | grep 'non-LL source'"
-echo "Then edit /etc/frr/ospf6d.conf, and enable the service:"
+echo "  grep -a 'non-LL source' $PREFIX/sbin/ospf6d-$TAG"
+echo "Check it runs:"
+echo "  $PREFIX/sbin/ospf6d-$TAG --version"
+echo "Then edit /etc/frr/ospf6d.conf and start the service:"
 echo "  systemctl enable --now frr    # or /usr/lib/frr/frrinit.sh start"
